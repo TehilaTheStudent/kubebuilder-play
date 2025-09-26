@@ -1,0 +1,36 @@
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: cronjob-project
+    app.kubernetes.io/managed-by: kustomize
+  name: cronjob-sample
+spec: 
+  # Run every minute for testing
+  schedule: "* * * * *"
+  
+  # Allow concurrent jobs for testing
+  concurrencyPolicy: Allow
+  
+  # Keep history for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  # Job template
+  jobTemplate: 
+    spec: 
+      template: 
+        spec: 
+          containers:
+            - name: hello-cronjob
+              image: busybox:1.35
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  echo "=== CronJob Execution ==="
+                  echo "Current time: $(date)"
+                  echo "Hostname: $(hostname)"
+                  echo "Job completed successfully!"
+                  sleep 10
+          restartPolicy: OnFailure

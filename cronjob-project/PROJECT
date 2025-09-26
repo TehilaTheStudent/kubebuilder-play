@@ -3,21 +3,23 @@
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
 cliVersion: 4.9.0
-domain: example.com
+domain: tutorial.kubebuilder.io
 layout:
 - go.kubebuilder.io/v4
-plugins:
-  autoupdate.kubebuilder.io/v1-alpha: {}
-projectName: memcached-operator
-repo: example.com
+projectName: cronjob-project
+repo: tutorial.kubebuilder.io/project
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: example.com
-  group: cache
-  kind: Memcached
-  path: example.com/api/v1alpha1
-  version: v1alpha1
+  domain: tutorial.kubebuilder.io
+  group: batch
+  kind: CronJob
+  path: tutorial.kubebuilder.io/project/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"

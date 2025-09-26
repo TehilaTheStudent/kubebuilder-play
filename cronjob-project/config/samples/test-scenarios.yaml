@@ -1,0 +1,146 @@
+# Test Scenario 1: CronJob with Forbid Concurrency Policy
+---
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  name: cronjob-forbid-concurrent
+  namespace: default
+spec:
+  schedule: "*/2 * * * *"  # Every 2 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: long-running-job
+            image: busybox:1.35
+            args:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting long job at $(date)"
+              sleep 180  # 3 minutes - longer than schedule interval
+              echo "Finished long job at $(date)"
+          restartPolicy: OnFailure
+
+---
+# Test Scenario 2: CronJob with Replace Concurrency Policy
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  name: cronjob-replace-concurrent
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"  # Every minute
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: replaceable-job
+            image: busybox:1.35
+            args:
+            - /bin/sh
+            - -c
+            - |
+              echo "Job started at $(date) with PID $$"
+              sleep 90  # 1.5 minutes - longer than schedule
+              echo "Job finished at $(date)"
+          restartPolicy: OnFailure
+
+---
+# Test Scenario 3: CronJob with Starting Deadline
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  name: cronjob-with-deadline
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"  # Every minute
+  startingDeadlineSeconds: 30  # Must start within 30 seconds
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: deadline-job
+            image: busybox:1.35
+            args:
+            - /bin/sh
+            - -c
+            - |
+              echo "Job with deadline started at $(date)"
+              echo "This job should start within 30 seconds of schedule"
+              sleep 5
+              echo "Job completed at $(date)"
+          restartPolicy: OnFailure
+
+---
+# Test Scenario 4: Suspended CronJob
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  name: cronjob-suspended
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"  # Every minute
+  suspend: true  # This should prevent job creation
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: suspended-job
+            image: busybox:1.35
+            args:
+            - /bin/sh
+            - -c
+            - echo "This job should NOT run because CronJob is suspended"
+          restartPolicy: OnFailure
+
+---
+# Test Scenario 5: CronJob that sometimes fails
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: CronJob
+metadata:
+  name: cronjob-sometimes-fails
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"  # Every minute
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3  # Keep more failed jobs for testing
+  jobTemplate:
+    spec:
+      backoffLimit: 1  # Only retry once
+      template:
+        spec:
+          containers:
+          - name: flaky-job
+            image: busybox:1.35
+            args:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting potentially flaky job at $(date)"
+              # Randomly fail ~50% of the time
+              if [ $(($(date +%s) % 2)) -eq 0 ]; then
+                echo "Job succeeded!"
+                exit 0
+              else
+                echo "Job failed!"
+                exit 1
+              fi
+          restartPolicy: OnFailure
