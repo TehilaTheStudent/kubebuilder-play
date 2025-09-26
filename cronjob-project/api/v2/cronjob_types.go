@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v2
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
@@ -32,6 +32,9 @@ import (
 // +kubebuilder:validation:Enum=Allow;Forbid;Replace
 type ConcurrencyPolicy string
 
+// represents a Cron field specifier.
+type CronField string
+
 const (
 	// AllowConcurrent allows CronJobs to run concurrently.
 	AllowConcurrent ConcurrencyPolicy = "Allow"
@@ -44,12 +47,31 @@ const (
 	ReplaceConcurrent ConcurrencyPolicy = "Replace"
 )
 
+// describes a Cron schedule.
+type CronSchedule struct {
+    // minute specifies the minutes during which the job executes.
+    // +optional
+    Minute *CronField `json:"minute,omitempty"`
+    // hour specifies the hour during which the job executes.
+    // +optional
+    Hour *CronField `json:"hour,omitempty"`
+    // dayOfMonth specifies the day of the month during which the job executes.
+    // +optional
+    DayOfMonth *CronField `json:"dayOfMonth,omitempty"`
+    // month specifies the month during which the job executes.
+    // +optional
+    Month *CronField `json:"month,omitempty"`
+    // dayOfWeek specifies the day of the week during which the job executes.
+    // +optional
+    DayOfWeek *CronField `json:"dayOfWeek,omitempty"`
+}
+
+
 // CronJobSpec defines the desired state of CronJob
 type CronJobSpec struct {
-	// schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
-	// +kubebuilder:validation:MinLength=0
-	// +required
-	Schedule string `json:"schedule"`
+    // schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
+    // +required
+    Schedule CronSchedule `json:"schedule"`
 
 	// startingDeadlineSeconds defines in seconds for starting the job if it misses scheduled
 	// time for any reason.  Missed jobs executions will be counted as failed ones.
@@ -124,7 +146,6 @@ type CronJobStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // CronJob is the Schema for the cronjobs API
 type CronJob struct {

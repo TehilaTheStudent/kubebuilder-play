@@ -22,4 +22,9 @@ resources:
     defaulting: true
     validation: true
     webhookVersion: v1
+- core: true
+  group: batch
+  kind: CronJob
+  path: k8s.io/api/batch/v2
+  version: v2
 version: "3"
