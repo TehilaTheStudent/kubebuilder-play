@@ -10,7 +10,7 @@ spec:
   schedule: "* * * * *"
   
   # Allow concurrent jobs for testing
-  concurrencyPolicy: Allow
+  # concurrencyPolicy: Forbid
   
   # Keep history for debugging
   successfulJobsHistoryLimit: 3

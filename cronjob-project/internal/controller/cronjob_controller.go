@@ -276,11 +276,9 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		fmt.Printf("✅ Concurrency policy ALLOW: %d active jobs will continue\n", len(activeJobs))
 	}
 
-
-
 	// actually make the job...
 	fmt.Println("🏗️  Step 9: Creating new Job...")
-	job, err := utils.ConstructJobForCronJob(&cronJob, missedRun,r.Scheme)
+	job, err := utils.ConstructJobForCronJob(&cronJob, missedRun, r.Scheme)
 	if err != nil {
 		fmt.Printf("❌ Error constructing job: %v\n", err)
 		log.Error(err, "unable to construct job from template")
